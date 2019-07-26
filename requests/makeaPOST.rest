@@ -1,0 +1,9 @@
+post http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name": "Arto Hellasssss",
+    "number": "090901"
+}
+// writeup : be careful when doing the headers as it is fairly easy 
+// to mess up
