@@ -3,7 +3,9 @@ const app = express()
 const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 var morgan = require('morgan')
+const cors = require('cors')
 
+app.use(cors())
 morgan.token('type', function(req,res) {return JSON.stringify(req.body)})
 app.use(morgan(function (tokens, req, res) {
     return `Server running on port ${PORT} \n` + [
@@ -119,7 +121,7 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 // 204 code means that the request has suceeded but the client
 // doesnt need to go away from its current page
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
