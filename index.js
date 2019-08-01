@@ -4,6 +4,8 @@ const bodyParser = require('body-parser')
 app.use(bodyParser.json())
 var morgan = require('morgan')
 const cors = require('cors')
+const People = require('./models/person')
+require('dotenv').config()
 app.use(express.static('build')) // remember this in order to render the build
 // for the main page
 app.use(cors())
@@ -18,7 +20,10 @@ app.use(morgan(function (tokens, req, res) {
       tokens.type(req,res)
     ].join(' ')
   }))
-
+// goal try to set up so you get rid of persons,
+// replace it with our database
+// then fetch everything from our database
+/*
 let persons = [  
     {    
         name: "Arto Hellas",
@@ -41,13 +46,16 @@ let persons = [
         id: 4
     }
 ]
+*/
 /* this was a text but it works
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
   })
   */
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    People.find({}).then(persons => {
+        response.json(persons)
+    })
   })
 // info just gives infromation about the current length of the array 
 // we do a line break then  we provide  a new date object to give current time
@@ -83,7 +91,7 @@ const idGenerator = () => {
 app.post('/api/persons', (request, response) => {
     const body = request.body 
     const personName = body.name
-    const inPhoneBook = persons.find(person => person.name == personName)
+    //const inPhoneBook = persons.find(person => person.name == personName)
     if (!body.name) {
         return response.status(400).json({
             error: 'name missing'
@@ -94,22 +102,27 @@ app.post('/api/persons', (request, response) => {
             error: 'number missing'
         })
     }
+    /*
     else if (inPhoneBook) {
         return response.status(400).json({
             error: 'name is already in phonebook'
         }) // tested once, works!
     }
-    const person = {
+    */
+    const person = new People({
         name: body.name,
         number: body.number,
         id: idGenerator(),
-    }
+    })
 
-    persons = persons.concat(person)
+    person.save().then(savedPerson => {
+        response.json(savedPerson.toJSON())
+    })
+    //persons = persons.concat(person)
     console.log(morgan())
 
 
-    response.json(person) // dont forget to use common sense
+    //response.json(person) // dont forget to use common sense
     // response is to return , request is to retrieve
     
 })
