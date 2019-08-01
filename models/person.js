@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
-
+//mongoose.set('useFindAndModify', false)
+// dont use this because if we do findIDandMOdify
+// it goes to thtis default which we want to avoid
 const url = process.env.MONGODB_URI
 
 
@@ -20,12 +22,13 @@ const phonebookSchema = new mongoose.Schema({
   })
 
 phonebookSchema.set('toJSON', {
-    transform: (document, returnedObjected) => {
-        returnedObjected.id = returnedObject._id.toString()
+    transform: (document, returnedObject) => {
+        returnedObject.id = returnedObject._id.toString()
         delete returnedObject._id
         delete returnedObject.__v
     }
 })
+
 // transform overwrites default objects toJSON(), for 
 // determining how Mongoose documents get serialized
 // by JSON.stringify()
