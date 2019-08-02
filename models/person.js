@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 //mongoose.set('useFindAndModify', false)
 // dont use this because if we do findIDandMOdify
 // it goes to thtis default which we want to avoid
+mongoose.set('useFindAndModify', false)
 const url = process.env.MONGODB_URI
 
 

@@ -88,10 +88,10 @@ const idGenerator = () => {
     console.log(morgan('tiny'))
 }
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body 
     const personName = body.name
-    //const inPhoneBook = persons.find(person => person.name == personName)
+    const inPhoneBook = People.find({name: personName})
     if (!body.name) {
         return response.status(400).json({
             error: 'name missing'
@@ -102,37 +102,75 @@ app.post('/api/persons', (request, response) => {
             error: 'number missing'
         })
     }
-    /*
-    else if (inPhoneBook) {
-        return response.status(400).json({
-            error: 'name is already in phonebook'
-        }) // tested once, works!
+
+    // dont make a new one or it will make a new person and add to it
+    //console.log(inPhoneBook)
+    if (inPhoneBook !== [])
+    {
+        console.log('thsi went through here')
+        const person = {
+            name: body.name,
+            number: body.number
+        }
+        People.find({name: personName}, {id: 1}).then(id => {
+            People.findByIdAndUpdate(id, person, {new: true})
+            .then(result => {
+                response.json(result.toJSON())
+            })
+        })
     }
-    */
-    const person = new People({
-        name: body.name,
-        number: body.number,
-        id: idGenerator(),
-    })
-
-    person.save().then(savedPerson => {
-        response.json(savedPerson.toJSON())
-    })
-    //persons = persons.concat(person)
-    console.log(morgan())
-
-
+    else 
+    {
+        const person = new People({
+            name: body.name,
+            number: body.number
+        })
+        person.save().then(savedPerson => {
+            response.json(savedPerson.toJSON())
+        })
+    }
+    
+        //persons = persons.concat(person)
+     
+    //console.log(morgan())
     //response.json(person) // dont forget to use common sense
     // response is to return , request is to retrieve
     
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-
-    response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    People.findByIdAndRemove(request.params.id)
+    .then(result => {
+        response.status(204).end()
+    })
+    .catch(error => next(error))
 })
+app.put('/api/persons', (request,response,next) => {
+    const body = request.body
+    const personName = body.name
+    const person = {
+        name: personName,
+        number: body.number
+    }
+    People.find({name: personName}, {id: 1}).then(id => {
+        People.findByIdAndUpdate(id, person, {new: true})
+        .then(result => {
+            response.json(result.toJSON())
+})
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+  
+    if (error.name === 'CastError' && error.kind == 'ObjectId') {
+      return response.status(400).send({ error: 'malformatted id' })
+    } 
+    // if it is this type of error do this 
+    // if not just do next
+    next(error)
+  }
+  
+  app.use(errorHandler)
+// found success in removing id!
 // 204 code means that the request has suceeded but the client
 // doesnt need to go away from its current page
 const PORT = process.env.PORT || 3001
