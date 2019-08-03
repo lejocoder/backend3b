@@ -1,7 +1,9 @@
 const mongoose = require('mongoose')
+
 //mongoose.set('useFindAndModify', false)
 // dont use this because if we do findIDandMOdify
 // it goes to thtis default which we want to avoid
+var uniqueValidator = require('mongoose-unique-validator')
 mongoose.set('useFindAndModify', false)
 const url = process.env.MONGODB_URI
 
@@ -18,8 +20,8 @@ mongoose.connect(url, {useNewUrlParser: true})
 
 
 const phonebookSchema = new mongoose.Schema({
-    name: String,
-    number: String
+    name: {type: String, unique: true, required: true, minlength: 3},
+    number: {type: String, required: true, minlength: 8}
   })
 
 phonebookSchema.set('toJSON', {
@@ -29,6 +31,7 @@ phonebookSchema.set('toJSON', {
         delete returnedObject.__v
     }
 })
+phonebookSchema.plugin(uniqueValidator)
 //change
 // transform overwrites default objects toJSON(), for 
 // determining how Mongoose documents get serialized

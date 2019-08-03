@@ -61,25 +61,25 @@ app.get('/api/persons', (request, response) => {
 // we do a line break then  we provide  a new date object to give current time
 // the request was granted
 app.get('/info', (request,response) => {
-    
-    response.send(`<div>
-    PhoneBook has info for ${persons.length} people. <br></br> ${new Date()}
+    People.find({}).count((error,number) => {
+        response.send(`<div>
+    PhoneBook has info for ${number} people. <br></br> ${new Date()}
 </div>`)
+    })
+    // we do this because it is async 
+    // can't just do People.find({}).count()
+    // have to include error argument to cause with just one argument
+    // alone it resorts to just the error which is null
+    
 })
 
 // first we retrieve the id, then we find the person, then
 // we find him/her than return our response in JSON form
-app.get('/api/persons/:id', (request,response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(note => note.id == id)
-    console.log(morgan())
-    if (person) {
-        response.json(person)
-    }
-    else {
-        response.status(404).end()
-    }
-    
+app.get('/api/persons/:id', (request,response, next) => {
+    //const id = Number(request.params.id)
+    People.findById(request.params.id).then(result => {
+        response.json(result.toJSON())
+    })
 })
 
 const idGenerator = () => {
@@ -104,7 +104,10 @@ app.post('/api/persons', (request, response, next) => {
     }
 
     // dont make a new one or it will make a new person and add to it
-    //console.log(inPhoneBook)
+    //console.log(inPhoneBook) this was a test of something, learned 
+    // something new here, People.find( the name then return the id)
+    // the id is used to find id and update it with person
+    /*
     if (inPhoneBook !== [])
     {
         console.log('thsi went through here')
@@ -129,7 +132,16 @@ app.post('/api/persons', (request, response, next) => {
             response.json(savedPerson.toJSON())
         })
     }
-    
+    */
+   const person = new People({
+        name: body.name,
+        number: body.number
+    })
+    person.save()
+    .then(savedPerson => {
+        response.json(savedPerson.toJSON())
+    })
+    .catch(error => next(error))
         //persons = persons.concat(person)
      
     //console.log(morgan())
@@ -145,17 +157,17 @@ app.delete('/api/persons/:id', (request, response, next) => {
     })
     .catch(error => next(error))
 })
-app.put('/api/persons', (request,response,next) => {
+app.put('/api/persons/:id', (request,response,next) => {
     const body = request.body
     const personName = body.name
     const person = {
         name: personName,
         number: body.number
     }
-    People.find({name: personName}, {id: 1}).then(id => {
-        People.findByIdAndUpdate(id, person, {new: true})
-        .then(result => {
-            response.json(result.toJSON())
+    People.findByIdAndUpdate(request.params.id, person, {new: true}) 
+    .then( result => { 
+        response.json(result.toJSON())
+    })
 })
 
 const errorHandler = (error, request, response, next) => {
@@ -163,7 +175,10 @@ const errorHandler = (error, request, response, next) => {
   
     if (error.name === 'CastError' && error.kind == 'ObjectId') {
       return response.status(400).send({ error: 'malformatted id' })
-    } 
+    }
+    else if (error.name === 'ValidationError' ) {
+        return response.status(400).json({error: error.message})
+    }
     // if it is this type of error do this 
     // if not just do next
     next(error)
@@ -177,7 +192,3 @@ const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
-
-
-// having porblems figuring out how to retrieve the content of
-// the request
