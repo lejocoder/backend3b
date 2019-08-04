@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "heroku ps:scale web=1 && heroku open",
+    "stop": "heroku ps:scale web=0",
     "watch": "nodemon index.js",
     "build:ui": "rm -rf build && cd ../frontend3b && npm run build --prod && cp -r build ../backend3b",
     "deploy": "git push heroku master",
